@@ -10,11 +10,12 @@ import org.junit.Test;
 
 public class ProducerAPITest {
 
+	private Properties config;
 	private ProducerAPI producer;
 
 	@Before
 	public void setUp() throws Exception {
-		Properties config = new Properties();
+		config = new Properties();
 		config.put("bootstrap.servers", "localhost:9092");
 		// ack配置何种情况认为请求已完成
 		// all表示所有记录都要确认提交，请求才算完成
@@ -41,7 +42,6 @@ public class ProducerAPITest {
 		// key.serializer和value.serializer指定了数据转换的规则
 		config.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
 		config.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-		producer = new ProducerAPI(config);
 	}
 
 	@After
@@ -51,6 +51,7 @@ public class ProducerAPITest {
 
 	@Test
 	public void testProduce() {
+		producer = new ProducerAPI(config);
 		Map<String, String> record = new LinkedHashMap<String, String>();
 		record.put("key1", "value1");
 		record.put("key2", "value2");
@@ -60,4 +61,18 @@ public class ProducerAPITest {
 		producer.produce("my-topic", record);
 	}
 
+	@Test
+	public void testProduceWithTransaction() {
+		String transactionId = "t1";
+		config.put("retries", Integer.MAX_VALUE);
+		config.put("transactional.id", transactionId);
+		producer = new ProducerAPI(config);
+		Map<String, String> record = new LinkedHashMap<String, String>();
+		record.put(transactionId + ":key1", "value1");
+		record.put(transactionId + ":key2", "value2");
+		record.put(transactionId + ":key3", "value3");
+		record.put(transactionId + ":key4", "value4");
+		record.put(transactionId + ":key5", "value5");
+		producer.produceWithTransaction("my-topic", record);
+	}
 }
