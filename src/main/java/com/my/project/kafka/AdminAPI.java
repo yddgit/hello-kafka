@@ -1,7 +1,5 @@
 package com.my.project.kafka;
 
-import java.io.Closeable;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -13,7 +11,7 @@ import org.apache.kafka.clients.admin.NewTopic;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AdminAPI implements Closeable {
+public class AdminAPI implements AutoCloseable {
 
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -85,7 +83,7 @@ public class AdminAPI implements Closeable {
 	}
 
 	@Override
-	public void close() throws IOException {
+	public void close() throws Exception {
 		this.client.close();
 	}
 }
