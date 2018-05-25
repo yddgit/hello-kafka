@@ -24,7 +24,7 @@ public class AdminAPI implements Closeable {
 	}
 
 	/**
-	 * 创建Topic
+	 * 创建topic
 	 * @param topics topic name
 	 */
 	public void createTopics(String... topics) {
@@ -69,6 +69,18 @@ public class AdminAPI implements Closeable {
 			logger.info(buffer.toString());
 		} catch (Exception e) {
 			logger.error("describe topic error: " + topics, e);
+		}
+	}
+
+	/**
+	 * 删除topic
+	 * @param topics topic name
+	 */
+	public void deleteTopics(String... topics) {
+		try {
+			client.deleteTopics(Arrays.asList(topics)).all().get();
+		} catch (Exception e) {
+			logger.error("delete topic error: " + topics, e);
 		}
 	}
 

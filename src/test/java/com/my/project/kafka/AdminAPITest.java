@@ -13,7 +13,7 @@ public class AdminAPITest {
 	@Before
 	public void setUp() throws Exception {
 		Properties config = new Properties();
-		config.put("bootstrap.servers", "192.168.56.10:9092");
+		config.put("bootstrap.servers", "localhost:9092");
 		admin = new AdminAPI(config);
 	}
 
@@ -35,5 +35,10 @@ public class AdminAPITest {
 	@Test
 	public void testDescribe() {
 		admin.describeTopics("test", "my-topic");
+	}
+
+	@Test
+	public void testDelete() {
+		admin.deleteTopics("test", "my-topic");
 	}
 }
