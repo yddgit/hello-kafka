@@ -3,6 +3,7 @@ package com.my.project.kafka;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.UUID;
 
 import org.junit.After;
 import org.junit.Before;
@@ -53,17 +54,16 @@ public class ProducerAPITest {
 	public void testProduce() {
 		producer = new ProducerAPI(config);
 		Map<String, String> record = new LinkedHashMap<String, String>();
-		record.put("key1", "value1");
-		record.put("key2", "value2");
-		record.put("key3", "value3");
-		record.put("key4", "value4");
-		record.put("key5", "value5");
+		for(int i=0; i<100; i++) {
+			record.put("key" + i, "value" + i);
+		}
 		producer.produce("my-topic", record);
+		producer.produce("test", record);
 	}
 
 	@Test
 	public void testProduceWithTransaction() {
-		String transactionId = "t1";
+		String transactionId = UUID.randomUUID().toString();
 		config.put("retries", Integer.MAX_VALUE);
 		config.put("transactional.id", transactionId);
 		producer = new ProducerAPI(config);
