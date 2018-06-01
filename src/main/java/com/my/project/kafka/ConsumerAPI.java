@@ -86,6 +86,30 @@ public class ConsumerAPI implements AutoCloseable {
 		}
 	}
 
+	/**
+	 * Manual Partition Assignment
+	 * 
+	 * 需要手动指定partition的场合：
+	 * 1. 如果处理包含关联partition的一些本地状态，就需要从partition的本地磁盘获取数据
+	 * 2. 如果处理程序是支持HA的，当结点失效后会自动重启，这时就不需要kafka检测失效并重新分配partition，
+	 * 因为consumer会自动在别一台机器上重启并接管其原来分配到的partition。
+	 * 
+	 * 调用assign方法开始消费，手动分配后就不会使用自动分配了，通常要保证每个consumer的group.id是唯一的。
+	 * 不能将手动分配partition和自动分配partition混合使用。
+	 * 
+	 * @param topic
+	 */
+	public void consumeWithManualPartitionAssignment(String topic, int partition) {
+		TopicPartition partition0 = new TopicPartition(topic, partition);
+		consumer.assign(Arrays.asList(partition0));
+		while(true) {
+			ConsumerRecords<String, String> records = consumer.poll(100);
+			for(ConsumerRecord<String, String> record : records) {
+				System.out.printf("topic = %s, offset = %d, key = %s, value = %s%n", record.topic(), record.offset(), record.key(), record.value());
+			}
+		}
+	}
+
 	@Override
 	public void close() throws Exception {
 		consumer.close();

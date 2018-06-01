@@ -47,4 +47,12 @@ public class ConsumerAPITest {
 		consumer = new ConsumerAPI(config);
 		consumer.consumePartitionWithManualOffsetCommit("my-topic", "test");
 	}
+
+	@Test
+	public void testManualPartitionAssignment() {
+		config.put("enable.auto.commit", "true");
+		config.put("auto.commit.interval.ms", "1000");
+		consumer = new ConsumerAPI(config);
+		consumer.consumeWithManualPartitionAssignment("my-topic", 0);
+	}
 }
