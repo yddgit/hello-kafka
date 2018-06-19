@@ -55,4 +55,12 @@ public class ConsumerAPITest {
 		consumer = new ConsumerAPI(config);
 		consumer.consumeWithManualPartitionAssignment("my-topic", 0);
 	}
+
+	@Test
+	public void testSeekToBeginOrEnd() {
+		config.put("enable.auto.commit", "true");
+		config.put("auto.commit.interval.ms", "1000");
+		consumer = new ConsumerAPI(config);
+		consumer.consumeSeekToBeginOrEnd("my-topic", "test");
+	}
 }

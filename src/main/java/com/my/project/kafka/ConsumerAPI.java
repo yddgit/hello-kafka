@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -106,6 +107,37 @@ public class ConsumerAPI implements AutoCloseable {
 			ConsumerRecords<String, String> records = consumer.poll(100);
 			for(ConsumerRecord<String, String> record : records) {
 				System.out.printf("topic = %s, offset = %d, key = %s, value = %s%n", record.topic(), record.offset(), record.key(), record.value());
+			}
+		}
+	}
+
+	/**
+	 * 对于对时间敏感的消息处理程序，如果已经落后了很多条消息，而且也不想处理所有的数据记录，那就直接跳到最近的消息位置即可。
+	 * 
+	 * 还有一个场景是应用程序维护了一些本地状态，这类应用需要在启动时就从本地存储中初始化position。
+	 * 同样如果本地状态被销毁(如磁盘数据丢失)，那可以在新的机器上重新消费所有数据重建本地状态(假设Kakfa保留了足够的历史数据)
+	 * 
+	 * Kafka使用seek(TopicPartition, long)方法指定新的position。特别的，跳转到开始/最新的offset使用如下两个方法：
+	 * seekToBeginning(Collection)和seekToEnd(Collection)
+	 * 
+	 * @param topic
+	 */
+	public void consumeSeekToBeginOrEnd(String... topic) {
+		this.consumer.subscribe(Arrays.asList(topic));
+		boolean needReConsume = true;
+		while(true) {
+			ConsumerRecords<String, String> records = consumer.poll(100);
+			Set<TopicPartition> partitions = records.partitions();
+			if(needReConsume) {
+				this.consumer.seekToBeginning(partitions);
+				// this.consumer.seekToEnd(partitions);
+				needReConsume = false;
+			}
+			for(TopicPartition partition : partitions) {
+				List<ConsumerRecord<String, String>> partitonRecords = records.records(partition);
+				partitonRecords.forEach(record -> {
+					System.out.printf("topic = %s, offset = %d, key = %s, value = %s%n", record.topic(), record.offset(), record.key(), record.value());
+				});
 			}
 		}
 	}
