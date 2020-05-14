@@ -2,12 +2,16 @@ package com.my.project.zookeeper;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Deque;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.ZooKeeper;
+import org.apache.zookeeper.common.PathUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,31 +44,32 @@ public class ZooKeeperHelper implements Watcher, Closeable {
 	}
 
 	/**
-	 * 删除znode
+	 * 递归删除znode
 	 * @param path znode path
 	 * @throws Exception
 	 */
 	public void delete(String path) throws Exception {
-		deleteRecursive(zoo, path);
-	}
-
-	/**
-	 * 递归删除zookeeper结点
-	 * @param zoo ZooKeeper
-	 * @param path 结点path
-	 * @throws Exception
-	 */
-	private void deleteRecursive(ZooKeeper zoo, String path) throws Exception {
-		List<String> children = zoo.getChildren(path, false);
-		if(children != null && children.size() > 0) {
-			for(String childPath : children) {
-				deleteRecursive(zoo, path + "/" + childPath);
+		PathUtils.validatePath(path);
+		Deque<String> queue = new LinkedList<String>();
+		List<String> tree = new ArrayList<String>();
+		queue.add(path);
+		tree.add(path);
+		while (true) {
+			String node = queue.pollFirst();
+			if (node == null) {
+				break;
 			}
-		} else {
-			logger.info(path);
-			if(zoo.exists(path, false) != null) {
-				zoo.delete(path, -1);
+			List<String> children = zoo.getChildren(node, false);
+			for (final String child : children) {
+				final String childPath = node + "/" + child;
+				queue.add(childPath);
+				tree.add(childPath);
 			}
+		}
+		logger.info("Deleting " + tree);
+		logger.info("Deleting " + tree.size() + " subnodes");
+		for(int i = tree.size() - 1; i >= 0; --i) {
+			zoo.delete(tree.get(i), -1);
 		}
 	}
 
